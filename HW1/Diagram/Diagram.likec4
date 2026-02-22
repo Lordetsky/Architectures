@@ -1,0 +1,67 @@
+specification {
+  element actor {
+    style { shape person }
+  }
+
+  element system
+  element component
+  element database {
+    style { shape storage }
+  }
+}
+
+model {
+  buyerSeller = actor 'Buyer/Seller'
+
+  marketplace = system 'Marketplace' 'Digital platform for products and orders' {
+
+    component gateway 'API Gateway' 'Single entry point for clients'
+
+    component userSvc 'User Service' 'Users, profiles, roles, auth data'
+    database userDb 'User DB' 'PostgreSQL'
+
+    component catalogSvc 'Catalog Service' 'Product catalog for sellers'
+    database catalogDb 'Catalog DB' 'PostgreSQL'
+
+    component feedSvc 'Feed Service' 'Personalized recommendations'
+    database feedDb 'Feed DB' 'PostgreSQL'
+
+    component orderSvc 'Order Service' 'Order creation and lifecycle'
+    database orderDb 'Order DB' 'PostgreSQL'
+
+    component paySvc 'Payment Service' 'Payment accounting and statuses'
+    database payDb 'Payment DB' 'PostgreSQL'
+
+    component notifSvc 'Notification Service' 'Sends notifications'
+    database notifDb 'Notification DB' 'PostgreSQL'
+
+    buyerSeller -> gateway 'Uses' 'HTTPS'
+
+    gateway -> userSvc 'Auth/profile' 'HTTPS'
+    gateway -> catalogSvc 'Browse/manage catalog' 'HTTPS'
+    gateway -> feedSvc 'Get feed' 'HTTPS'
+    gateway -> orderSvc 'Create/manage orders' 'HTTPS'
+    gateway -> paySvc 'Payment operations' 'HTTPS'
+
+    userSvc -> userDb 'Reads/Writes'
+    catalogSvc -> catalogDb 'Reads/Writes'
+    feedSvc -> feedDb 'Reads/Writes'
+    orderSvc -> orderDb 'Reads/Writes'
+    paySvc -> payDb 'Reads/Writes'
+    notifSvc -> notifDb 'Reads/Writes'
+
+    gateway -> notifSvc 'Notification operations' 'HTTPS'
+  }
+}
+
+views {
+  view index {
+    title 'Marketplace — Container view (LikeC4)'
+    include *
+  }
+
+  view marketplace_containers of marketplace {
+    title 'Marketplace — internal containers'
+    include *
+  }
+}
