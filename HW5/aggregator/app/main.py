@@ -14,6 +14,7 @@ from app.clickhouse_queries import (
     query_top_movies,
     query_conversion,
     query_retention,
+    save_metrics_to_clickhouse,
 )
 from app.postgres_client import save_metrics
 
@@ -62,6 +63,7 @@ def run_aggregation(target_date: str | None = None):
         rows.append((target_date, "retention_d7", ret_d7, {}))
         records_processed += 1
 
+        save_metrics_to_clickhouse(ch, rows)
         save_metrics(rows)
     except Exception:
         logger.exception("aggregation failed for date=%s", target_date)

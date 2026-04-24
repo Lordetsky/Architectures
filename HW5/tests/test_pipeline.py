@@ -14,6 +14,24 @@ POLL_INTERVAL = 2
 POLL_TIMEOUT = 60
 
 
+def wait_for_producer():
+    deadline = time.time() + 60
+    while time.time() < deadline:
+        try:
+            r = requests.get(f"{PRODUCER_URL}/health", timeout=3)
+            if r.status_code == 200:
+                return
+        except Exception:
+            pass
+        time.sleep(2)
+    raise RuntimeError("producer not ready within 60s")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def ensure_producer_ready():
+    wait_for_producer()
+
+
 @pytest.fixture
 def ch_client():
     client = clickhouse_connect.get_client(host=CH_HOST, port=CH_PORT, database=CH_DB)

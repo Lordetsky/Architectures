@@ -74,3 +74,12 @@ def query_retention(client, target_date: str, days_ago: int) -> float:
         parameters={"d": target_date, "n": days_ago},
     )
     return float(result.result_rows[0][0])
+
+
+def save_metrics_to_clickhouse(client, rows: list[tuple]):
+    for metric_date, metric_name, metric_value, _ in rows:
+        client.command(
+            "INSERT INTO daily_metrics (event_date, metric_name, metric_value) VALUES "
+            "(%(d)s, %(n)s, %(v)s)",
+            parameters={"d": metric_date, "n": metric_name, "v": metric_value},
+        )
