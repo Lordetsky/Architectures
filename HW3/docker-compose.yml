@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  booking_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_password
+      POSTGRES_DB: booking_db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking_user -d booking_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  flight_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: flight_user
+      POSTGRES_PASSWORD: flight_password
+      POSTGRES_DB: flight_db
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flight_user -d flight_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  flight_service:
+    build: ./flight_service
+    environment:
+      DATABASE_URL: "postgresql://flight_user:flight_password@flight_db:5432/flight_db"
+      API_KEY: "secret-key-123"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+    depends_on:
+      flight_db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "50051:50051"
+
+  booking_service:
+    build: ./booking_service
+    environment:
+      DATABASE_URL: "postgresql://booking_user:booking_password@booking_db:5432/booking_db"
+      FLIGHT_SERVICE_URL: "flight_service:50051"
+      API_KEY: "secret-key-123"
+    depends_on:
+      booking_db:
+        condition: service_healthy
+      flight_service:
+        condition: service_started
+    ports:
+      - "8000:8000"
